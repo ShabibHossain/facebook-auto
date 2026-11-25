@@ -1,0 +1,36 @@
+name: Post Animal Reel
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 3 AM UTC = 9 AM Bangladesh
+  workflow_dispatch:      # manual trigger
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests yt-dlp
+
+      - name: Run bot
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_ACCESS_TOKEN: ${{ secrets.FB_ACCESS_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python main.py
+
+      - name: Commit history
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add posted_history.json
+          git diff --staged --quiet || git commit -m "Update post history"
+          git push
